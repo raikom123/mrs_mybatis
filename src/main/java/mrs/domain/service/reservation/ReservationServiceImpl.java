@@ -1,95 +1,86 @@
 package mrs.domain.service.reservation;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import javax.persistence.EntityNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import mrs.domain.model.MeetingRoom;
-import mrs.domain.model.ReservableRoomId;
-import mrs.domain.model.Reservation;
-import mrs.domain.model.User;
-import mrs.domain.repository.MeetingRoomRepository;
-import mrs.domain.repository.ReservableRoomRepository;
-import mrs.domain.repository.ReservationRepository;
+import mrs.domain.mapper.ReservationsMapper;
+import mrs.domain.mapper.mybatis.MeetingRoomMapper;
+import mrs.domain.mapper.mybatis.ReservationMapper;
+import mrs.domain.model.ReservationEx;
+import mrs.domain.model.mybatis.MeetingRoom;
+import mrs.domain.model.mybatis.Reservation;
+import mrs.domain.model.mybatis.ReservationExample;
+import mrs.domain.model.mybatis.Usr;
 
 @Service
 @Transactional
 public class ReservationServiceImpl implements ReservationService {
 
-    private ReservationRepository reservationRepository;
+	private ReservationMapper reservationMapper;
 
-    private ReservableRoomRepository reservableRoomRepository;
+	private MeetingRoomMapper meetingRoomMapper;
 
-    private MeetingRoomRepository meetingRoomRepostory;
+	private ReservationsMapper reservationsMapper;
 
-    @Autowired
-    public ReservationServiceImpl(ReservationRepository reservationRepository,
-            ReservableRoomRepository reservableRoomRepository,
-            MeetingRoomRepository meetingRoomRepostory) {
-        this.reservationRepository = reservationRepository;
-        this.reservableRoomRepository = reservableRoomRepository;
-        this.meetingRoomRepostory = meetingRoomRepostory;
-    }
+	@Autowired
+	public ReservationServiceImpl(ReservationMapper reservationMapper,
+			MeetingRoomMapper meetingRoomMapper,
+			ReservationsMapper reservationsMapper) {
+		this.reservationMapper = reservationMapper;
+		this.meetingRoomMapper = meetingRoomMapper;
+		this.reservationsMapper = reservationsMapper;
+	}
 
-    @Override
-    public List<Reservation> findReservationList(ReservableRoomId reservableRoomId) {
-        return reservationRepository.findByReservableRoom_ReservableRoomIdOrderByStartTimeAsc(reservableRoomId);
-    }
+	@Override
+	public List<ReservationEx> findReservationList(Integer roomId, LocalDate date) {
+		return reservationsMapper.selectReservationExList(roomId, date);
+	}
 
-    @Override
-    public Reservation reserve(Reservation reservation) {
-        ReservableRoomId reservableRoomId = reservation.getReservableRoom().getReservableRoomId();
+	@Override
+	public Reservation reserve(Reservation reservation) {
+		// 対象の部屋が予約可能かどうかをチェック
+		Optional.ofNullable(reservationsMapper.selectReservableRoomForUpdate(reservation.getRoomId(), reservation.getReservedDate()))
+				.orElseThrow(() -> new UnavailableReservationException("入力の日付・部屋の組み合わせは予約できません。"));
 
-        // 対象の部屋が予約可能かどうかをチェック
-        reservableRoomRepository.findOneForUpdateByReservableRoomId(reservableRoomId).orElseThrow(
-                () -> new UnavailableReservationException("入力の日付・部屋の組み合わせは予約できません。"));
+		// 重複チェック
+		boolean overlap = reservationMapper.selectByExample(new ReservationExample() {
+			{
+				createCriteria()
+						.andRoomIdEqualTo(reservation.getRoomId())
+						.andReservedDateEqualTo(reservation.getReservedDate());
+			}
+		}).stream().anyMatch(x -> x.overlap(reservation));
+		if (overlap) {
+			throw new AlreadyReservedException("入力の時間帯はすでに予約済みです。");
+		}
 
-        // 重複チェック
-        boolean overlap = reservationRepository
-                .findByReservableRoom_ReservableRoomIdOrderByStartTimeAsc(reservableRoomId)
-                .stream()
-                .anyMatch(x -> x.overlap(reservation));
-        if (overlap) {
-            throw new AlreadyReservedException("入力の時間帯はすでに予約済みです。");
-        }
+		reservationMapper.insert(reservation);
+		return reservation;
+	}
 
-        return reservationRepository.save(reservation);
-    }
+	@Override
+	public void cancel(Integer reservationId, Usr requestUser) {
+		Reservation reservation = Optional.ofNullable(reservationMapper.selectByPrimaryKey(reservationId)).orElseThrow(
+				() -> new EntityNotFoundException("指定された予約が見つかりません。"));
+		if (reservation.enabledCancel(requestUser)) {
+			reservationMapper.deleteByPrimaryKey(reservationId);
+		} else {
+			throw new AccessDeniedException("要求されたキャンセルは許可できません。");
+		}
+	}
 
-    @Override
-    public void cancel(Integer reservationId, User requestUser) {
-        Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(
-                () -> new EntityNotFoundException("指定された予約が見つかりません。"));
-        if (reservation.enabledCancel(requestUser)) {
-            reservationRepository.delete(reservation);
-        } else {
-            throw new AccessDeniedException("要求されたキャンセルは許可できません。");
-        }
-    }
-
-    @Override
-    public MeetingRoom findMeetingRoom(Integer roomId) {
-        return meetingRoomRepostory.findById(roomId).orElseThrow(
-                () -> new EntityNotFoundException("指定された部屋が見つかりません。"));
-    }
-
-    @Override
-    @PreAuthorize("reservation.enabledCancel(principal.user)")
-    public void cancel(@P("reservation") Reservation reservation) {
-        reservationRepository.delete(reservation);
-    }
-
-    @Override
-    public Reservation findOne(Integer reservationId) {
-        return reservationRepository.findById(reservationId).orElseThrow(
-                () -> new EntityNotFoundException("指定された予約が取得できません。"));
-    }
+	@Override
+	public MeetingRoom findMeetingRoom(Integer roomId) {
+		return Optional.ofNullable(meetingRoomMapper.selectByPrimaryKey(roomId)).orElseThrow(
+				() -> new EntityNotFoundException("指定された部屋が見つかりません。"));
+	}
 
 }

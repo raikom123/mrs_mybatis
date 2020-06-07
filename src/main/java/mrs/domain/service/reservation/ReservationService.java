@@ -1,23 +1,20 @@
 package mrs.domain.service.reservation;
 
+import java.time.LocalDate;
 import java.util.List;
 
-import mrs.domain.model.MeetingRoom;
-import mrs.domain.model.ReservableRoomId;
-import mrs.domain.model.Reservation;
-import mrs.domain.model.User;
+import mrs.domain.model.ReservationEx;
+import mrs.domain.model.mybatis.MeetingRoom;
+import mrs.domain.model.mybatis.Reservation;
+import mrs.domain.model.mybatis.Usr;
 
 public interface ReservationService {
 
-    List<Reservation> findReservationList(ReservableRoomId reservableRoomId);
+    List<ReservationEx> findReservationList(Integer roomId, LocalDate date);
 
     Reservation reserve(Reservation reservation);
 
-    void cancel(Integer reservationId, User requestUser);
-
-    void cancel(Reservation reservation);
-
-    Reservation findOne(Integer reservationId);
+    void cancel(Integer reservationId, Usr requestUser);
 
     MeetingRoom findMeetingRoom(Integer roomId);
 

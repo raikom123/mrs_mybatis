@@ -7,129 +7,168 @@ import java.time.LocalTime;
 
 import org.junit.jupiter.api.Test;
 
-import mrs.domain.model.ReservableRoom;
-import mrs.domain.model.ReservableRoomId;
-import mrs.domain.model.Reservation;
 import mrs.domain.model.RoleName;
-import mrs.domain.model.User;
+import mrs.domain.model.mybatis.Reservation;
+import mrs.domain.model.mybatis.Usr;
 
 class ReservationTests {
 
-    @Test
-    void overlap_ReservableRoomIdが違う場合falseを返却すること() {
-        Reservation source = new Reservation();
-        ReservableRoomId sourceReservableRoomId = new ReservableRoomId(1, LocalDate.now());
-        source.setReservableRoom(new ReservableRoom(sourceReservableRoomId));
+	@Test
+	void overlap_ReservableRoomIdが違う場合falseを返却すること() {
+		var source = new Reservation() {
+			{
+				setRoomId(1);
+				setReservedDate(LocalDate.now());
+			}
+		};
 
-        Reservation target = new Reservation();
-        ReservableRoomId targetReservableRoomId = new ReservableRoomId(2, LocalDate.now());
-        target.setReservableRoom(new ReservableRoom(targetReservableRoomId));
+		var target = new Reservation() {
+			{
+				setRoomId(2);
+				setReservedDate(LocalDate.now());
+			}
+		};
 
-        assertFalse(source.overlap(target));
-        assertFalse(target.overlap(source));
-    }
+		assertFalse(source.overlap(target));
+		assertFalse(target.overlap(source));
+	}
 
-    @Test
-    void overlap_時刻が重ならない場合falseを返却すること() {
-        ReservableRoomId reservableRoomId = new ReservableRoomId(1, LocalDate.now());
-        Reservation source = new Reservation();
-        source.setReservableRoom(new ReservableRoom(reservableRoomId));
-        source.setStartTime(LocalTime.of(1, 0));
-        source.setEndTime(LocalTime.of(2, 0));
+	@Test
+	void overlap_時刻が重ならない場合falseを返却すること() {
+		var source = new Reservation() {
+			{
+				setRoomId(1);
+				setReservedDate(LocalDate.now());
+				setStartTime(LocalTime.of(1, 0));
+				setEndTime(LocalTime.of(2, 0));
+			}
+		};
 
-        Reservation target = new Reservation();
-        target.setReservableRoom(new ReservableRoom(reservableRoomId));
-        target.setStartTime(LocalTime.of(3, 0));
-        target.setEndTime(LocalTime.of(4, 0));
+		var target = new Reservation() {
+			{
+				setRoomId(source.getRoomId());
+				setReservedDate(source.getReservedDate());
+				setStartTime(LocalTime.of(3, 0));
+				setEndTime(LocalTime.of(4, 0));
+			}
+		};
 
-        assertFalse(source.overlap(target));
-        assertFalse(target.overlap(source));
-    }
+		assertFalse(source.overlap(target));
+		assertFalse(target.overlap(source));
+	}
 
-    @Test
-    void overlap_開始時刻と終了時刻が同じ場合falseを返却すること() {
-        ReservableRoomId reservableRoomId = new ReservableRoomId(1, LocalDate.now());
-        Reservation source = new Reservation();
-        source.setReservableRoom(new ReservableRoom(reservableRoomId));
-        source.setStartTime(LocalTime.of(1, 0));
-        source.setEndTime(LocalTime.of(2, 0));
+	@Test
+	void overlap_開始時刻と終了時刻が同じ場合falseを返却すること() {
+		var source = new Reservation() {
+			{
+				setRoomId(1);
+				setReservedDate(LocalDate.now());
+				setStartTime(LocalTime.of(1, 0));
+				setEndTime(LocalTime.of(2, 0));
+			}
+		};
 
-        Reservation target = new Reservation();
-        target.setReservableRoom(new ReservableRoom(reservableRoomId));
-        target.setStartTime(LocalTime.of(2, 0));
-        target.setEndTime(LocalTime.of(3, 0));
+		var target = new Reservation() {
+			{
+				setRoomId(source.getRoomId());
+				setReservedDate(source.getReservedDate());
+				setStartTime(LocalTime.of(2, 0));
+				setEndTime(LocalTime.of(3, 0));
+			}
+		};
 
-        assertFalse(source.overlap(target));
-        assertFalse(target.overlap(source));
-    }
+		assertFalse(source.overlap(target));
+		assertFalse(target.overlap(source));
+	}
 
-    @Test
-    void overlap_開始時刻よりも終了時刻が重なる場合trueを返却すること() {
-        ReservableRoomId reservableRoomId = new ReservableRoomId(1, LocalDate.now());
-        Reservation source = new Reservation();
-        source.setReservableRoom(new ReservableRoom(reservableRoomId));
-        source.setStartTime(LocalTime.of(1, 0));
-        source.setEndTime(LocalTime.of(2, 0));
+	@Test
+	void overlap_開始時刻よりも終了時刻が重なる場合trueを返却すること() {
+		var source = new Reservation() {
+			{
+				setRoomId(1);
+				setReservedDate(LocalDate.now());
+				setStartTime(LocalTime.of(1, 0));
+				setEndTime(LocalTime.of(2, 0));
+			}
+		};
 
-        Reservation target = new Reservation();
-        target.setReservableRoom(new ReservableRoom(reservableRoomId));
-        target.setStartTime(LocalTime.of(1, 30));
-        target.setEndTime(LocalTime.of(3, 0));
+		var target = new Reservation() {
+			{
+				setRoomId(source.getRoomId());
+				setReservedDate(source.getReservedDate());
+				setStartTime(LocalTime.of(1, 30));
+				setEndTime(LocalTime.of(3, 0));
+			}
+		};
 
-        assertTrue(source.overlap(target));
-        assertTrue(target.overlap(source));
-    }
+		assertTrue(source.overlap(target));
+		assertTrue(target.overlap(source));
+	}
 
-    @Test
-    void overlap_予約時刻が範囲内の場合trueを返却すること() {
-        ReservableRoomId reservableRoomId = new ReservableRoomId(1, LocalDate.now());
-        Reservation source = new Reservation();
-        source.setReservableRoom(new ReservableRoom(reservableRoomId));
-        source.setStartTime(LocalTime.of(1, 0));
-        source.setEndTime(LocalTime.of(3, 0));
+	@Test
+	void overlap_予約時刻が範囲内の場合trueを返却すること() {
+		var source = new Reservation() {
+			{
+				setRoomId(1);
+				setReservedDate(LocalDate.now());
+				setStartTime(LocalTime.of(1, 0));
+				setEndTime(LocalTime.of(3, 0));
+			}
+		};
 
-        Reservation target = new Reservation();
-        target.setReservableRoom(new ReservableRoom(reservableRoomId));
-        target.setStartTime(LocalTime.of(1, 30));
-        target.setEndTime(LocalTime.of(2, 30));
+		var target = new Reservation() {
+			{
+				setRoomId(source.getRoomId());
+				setReservedDate(source.getReservedDate());
+				setStartTime(LocalTime.of(1, 30));
+				setEndTime(LocalTime.of(2, 30));
+			}
+		};
 
-        assertTrue(source.overlap(target));
-        assertTrue(target.overlap(source));
-    }
+		assertTrue(source.overlap(target));
+		assertTrue(target.overlap(source));
+	}
 
-    @Test
-    void enabledCancel_RoleNameがADMINの場合trueを返却すること() {
-        User user = new User();
-        user.setRoleName(RoleName.ADMIN);
+	@Test
+	void enabledCancel_RoleNameがADMINの場合trueを返却すること() {
+		var user = new Usr();
+		user.setRoleName(RoleName.ADMIN.name());
 
-        Reservation reservation = new Reservation();
-        assertTrue(reservation.enabledCancel(user));
-    }
+		var reservation = new Reservation();
+		assertTrue(reservation.enabledCancel(user));
+	}
 
-    @Test
-    void enabledCancel_userIdが同じ場合trueを返却すること() {
-        User user = new User();
-        user.setUserId("test");
-        user.setRoleName(RoleName.USER);
+	@Test
+	void enabledCancel_userIdが同じ場合trueを返却すること() {
+		var user = new Usr() {
+			{
+				setUserId("test");
+				setRoleName(RoleName.USER.name());
+			}
+		};
 
-        Reservation reservation = new Reservation();
-        User reservationUser = new User();
-        reservationUser.setUserId("test");
-        reservation.setUser(reservationUser);
-        assertTrue(reservation.enabledCancel(user));
-    }
+		var reservation = new Reservation() {
+			{
+				setUserId("test");
+			}
+		};
+		assertTrue(reservation.enabledCancel(user));
+	}
 
-    @Test
-    void enabledCancel_userIdが異なる場合falseを返却すること() {
-        User user = new User();
-        user.setUserId("test");
-        user.setRoleName(RoleName.USER);
-
-        Reservation reservation = new Reservation();
-        User reservationUser = new User();
-        reservationUser.setUserId("reservation");
-        reservation.setUser(reservationUser);
-        assertFalse(reservation.enabledCancel(user));
-    }
+	@Test
+	void enabledCancel_userIdが異なる場合falseを返却すること() {
+		var user = new Usr() {
+			{
+				setUserId("test");
+				setRoleName(RoleName.USER.name());
+			}
+		};
+		var reservation = new Reservation() {
+			{
+				setUserId("reservation");
+			}
+		};
+		assertFalse(reservation.enabledCancel(user));
+	}
 
 }

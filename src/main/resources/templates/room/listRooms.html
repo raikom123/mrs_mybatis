@@ -12,8 +12,8 @@
 
         <ul>
             <li th:each="room : ${roomList}">
-                <a th:href="@{/reservations/{date}/{roomId}(date=${date}, roomId=${room.meetingRoom.roomId})}"
-                   th:text="${room.meetingRoom.roomName}">会議室の名前</a>
+                <a th:href="@{/reservations/{date}/{roomId}(date=${date}, roomId=${room.roomId})}"
+                   th:text="${room.roomName}">会議室の名前</a>
             </li>
         </ul>
         <form th:action="@{/logout}" method="post">

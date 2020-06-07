@@ -1,28 +1,31 @@
 package mrs.domain.service.user;
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import mrs.domain.model.User;
-import mrs.domain.repository.UserRepository;
+import mrs.domain.mapper.mybatis.UsrMapper;
+import mrs.domain.model.mybatis.Usr;
+
 
 @Service
 public class ReservationUserDetailsServiceImpl implements ReservationUserDetailsService {
 
-    private UserRepository userRepository;
+    private UsrMapper usrMapper;
 
     @Autowired
-    public ReservationUserDetailsServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public ReservationUserDetailsServiceImpl(UsrMapper usrMapper) {
+        this.usrMapper = usrMapper;
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findById(username).orElseThrow(
+    	Usr usr = Optional.ofNullable(usrMapper.selectByPrimaryKey(username)).orElseThrow(
                 () -> new UsernameNotFoundException(username + " is not found."));
-        return new ReservationUserDetails(user);
+        return new ReservationUserDetails(usr);
     }
 
 }

@@ -20,9 +20,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import mrs.domain.model.ReservableRoom;
-import mrs.domain.model.ReservableRoomId;
-import mrs.domain.model.Reservation;
+import mrs.domain.model.mybatis.Reservation;
 import mrs.domain.service.reservation.ReservationService;
 import mrs.domain.service.room.RoomService;
 import mrs.domain.service.user.ReservationUserDetails;
@@ -52,8 +50,7 @@ public class ReservationsController {
     @GetMapping
     public String reserveForm(@DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @PathVariable("date") LocalDate date,
             @PathVariable("roomId") Integer roomId, Model model) {
-        ReservableRoomId reservableRoomId = new ReservableRoomId(roomId, date);
-        List<Reservation> reservationList = reservationService.findReservationList(reservableRoomId);
+        var reservationList = reservationService.findReservationList(roomId, date);
 
         List<LocalTime> timeList = Stream.iterate(LocalTime.of(0, 0), t -> t.plusMinutes(30))
                 .limit(24 * 2)
@@ -77,12 +74,15 @@ public class ReservationsController {
             return reserveForm(date, roomId, model);
         }
 
-        var reservableRoom = new ReservableRoom(new ReservableRoomId(roomId, date));
-        var reservation = new Reservation();
-        reservation.setStartTime(form.getStartTime());
-        reservation.setEndTime(form.getEndTime());
-        reservation.setReservableRoom(reservableRoom);
-        reservation.setUser(userDetails.getUser());
+        var reservation = new Reservation() {
+        	{
+        		setRoomId(roomId);
+        		setReservedDate(date);
+        		setStartTime(form.getStartTime());
+        		setEndTime(form.getEndTime());
+        		setUserId(userDetails.getUser().getUserId());
+        	}
+        };
 
         try {
             reservationService.reserve(reservation);
@@ -98,9 +98,9 @@ public class ReservationsController {
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @PathVariable("date") LocalDate date,
             @AuthenticationPrincipal ReservationUserDetails userDetails, Model model) {
         try {
-//            reservationService.cancel(reservationId, userDetails.getUser());
-            Reservation reservation = reservationService.findOne(reservationId);
-            reservationService.cancel(reservation);
+            reservationService.cancel(reservationId, userDetails.getUser());
+//            Reservation reservation = reservationService.findOne(reservationId);
+//            reservationService.cancel(reservation);
         } catch (Exception e) {
             return handleException(e, date, roomId, model);
         }

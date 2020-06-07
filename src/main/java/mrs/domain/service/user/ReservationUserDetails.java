@@ -7,7 +7,7 @@ import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import lombok.Getter;
-import mrs.domain.model.User;
+import mrs.domain.model.mybatis.Usr;
 
 @Getter
 public class ReservationUserDetails implements UserDetails {
@@ -15,15 +15,15 @@ public class ReservationUserDetails implements UserDetails {
     private static final long serialVersionUID = -8483333600109767964L;
 
 
-    private final User user;
+    private final Usr user;
 
-    public ReservationUserDetails(User user) {
-        this.user = user;
+    public ReservationUserDetails(Usr usr) {
+        this.user = usr;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return AuthorityUtils.createAuthorityList("ROLE_" + user.getRoleName().name());
+        return AuthorityUtils.createAuthorityList("ROLE_" + user.getRoleName());
     }
 
     @Override
