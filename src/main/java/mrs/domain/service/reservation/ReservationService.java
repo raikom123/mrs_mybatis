@@ -14,6 +14,8 @@ public interface ReservationService {
 
     Reservation reserve(Reservation reservation);
 
+    Reservation update(Reservation reservation);
+
     void cancel(Integer reservationId, Usr requestUser);
 
     MeetingRoom findMeetingRoom(Integer roomId);

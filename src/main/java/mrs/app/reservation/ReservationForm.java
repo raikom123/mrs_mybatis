@@ -1,6 +1,7 @@
 package mrs.app.reservation;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.time.LocalTime;
 
 import javax.validation.constraints.NotNull;
@@ -24,5 +25,14 @@ public class ReservationForm implements Serializable {
     @ThirtyMinutesUnit(message = "30分単位で入力してください")
     @DateTimeFormat(pattern = "HH:mm")
     private LocalTime endTime;
+
+    private String memo;
+    private Integer memberCount;
+
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    private LocalDate remindDate;
+
+    @DateTimeFormat(pattern = "HH:mm")
+    private LocalTime remindTime;
 
 }

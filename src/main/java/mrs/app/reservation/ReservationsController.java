@@ -81,11 +81,52 @@ public class ReservationsController {
         		setStartTime(form.getStartTime());
         		setEndTime(form.getEndTime());
         		setUserId(userDetails.getUser().getUserId());
+        		setMemberCount(form.getMemberCount());
+        		setMemo(form.getMemo());
+        		setRemindDate(form.getRemindDate());
+        		setRemindTime(form.getRemindTime());
         	}
         };
 
         try {
             reservationService.reserve(reservation);
+        } catch (Exception e) {
+            return handleException(e, date, roomId, model);
+        }
+
+        return "redirect:/reservations/{date}/{roomId}";
+    }
+
+    @PostMapping(params = "update")
+    public String update(@Validated ReservationForm form,
+            BindingResult bindingResult,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @PathVariable("date") LocalDate date,
+            @PathVariable("roomId") Integer roomId,
+            @RequestParam("reservationId") Integer reservationId,
+            @AuthenticationPrincipal ReservationUserDetails userDetails,
+            Model model) {
+
+        if (bindingResult.hasErrors()) {
+            return reserveForm(date, roomId, model);
+        }
+
+        var reservation = new Reservation() {
+        	{
+        		setReservationId(reservationId);
+        		setRoomId(roomId);
+        		setReservedDate(date);
+        		setStartTime(form.getStartTime());
+        		setEndTime(form.getEndTime());
+        		setUserId(userDetails.getUser().getUserId());
+        		setMemberCount(form.getMemberCount());
+        		setMemo(form.getMemo());
+        		setRemindDate(form.getRemindDate());
+        		setRemindTime(form.getRemindTime());
+        	}
+        };
+
+        try {
+            reservationService.update(reservation);
         } catch (Exception e) {
             return handleException(e, date, roomId, model);
         }

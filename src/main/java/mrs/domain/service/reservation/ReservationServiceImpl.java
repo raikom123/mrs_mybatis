@@ -67,6 +67,28 @@ public class ReservationServiceImpl implements ReservationService {
 	}
 
 	@Override
+	public Reservation update(Reservation reservation) {
+		// 対象の部屋が予約可能かどうかをチェック
+		Optional.ofNullable(reservationsMapper.selectReservableRoomForUpdate(reservation.getRoomId(), reservation.getReservedDate()))
+				.orElseThrow(() -> new UnavailableReservationException("入力の日付・部屋の組み合わせは予約できません。"));
+
+		boolean overlap = reservationMapper.selectByExample(new ReservationExample() {
+			{
+				createCriteria()
+						.andRoomIdEqualTo(reservation.getRoomId())
+						.andReservedDateEqualTo(reservation.getReservedDate())
+						.andReservationIdNotEqualTo(reservation.getReservationId());
+			}
+		}).stream().anyMatch(x -> x.overlap(reservation));
+		if (overlap) {
+			throw new AlreadyReservedException("入力の時間帯はすでに予約済みです。");
+		}
+
+		reservationMapper.updateByPrimaryKeySelective(reservation);
+		return reservation;
+	}
+
+	@Override
 	public void cancel(Integer reservationId, Usr requestUser) {
 		Reservation reservation = Optional.ofNullable(reservationMapper.selectByPrimaryKey(reservationId)).orElseThrow(
 				() -> new EntityNotFoundException("指定された予約が見つかりません。"));

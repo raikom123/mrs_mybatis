@@ -8,6 +8,10 @@
     <result column="reserved_date" jdbcType="DATE" property="reservedDate" />
     <result column="room_id" jdbcType="INTEGER" property="roomId" />
     <result column="user_id" jdbcType="VARCHAR" property="userId" />
+    <result column="memo" jdbcType="VARCHAR" property="memo" />
+    <result column="member_count" jdbcType="INTEGER" property="memberCount" />
+    <result column="remind_date" jdbcType="DATE" property="remindDate" />
+    <result column="remind_time" jdbcType="TIME" property="remindTime" />
     <result column="first_name" jdbcType="VARCHAR" property="firstName" />
     <result column="last_name" jdbcType="VARCHAR" property="lastName" />
   </resultMap>
@@ -23,6 +27,10 @@
 	    A.reserved_date,
 	    A.room_id,
 	    A.user_id,
+	    A.memo,
+	    A.member_count,
+	    A.remind_date,
+	    A.remind_time,
 	    B.first_name,
 	    B.last_name
     FROM

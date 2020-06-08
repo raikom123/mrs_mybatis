@@ -4,6 +4,28 @@
     <head>
         <meta charset="UTF-8">
         <title th:text="|${#temporals.format(date, 'yyyy/M/d')}の${room.roomName}|">2020/6/3の豊洲</title>
+        <script type="text/javascript">
+        (function() {
+        	window.addEventListener("load", function(e) {
+        		document.getElementById("updateButton").addEventListener("click", function() {
+        			// reservationIdを持つhiddenタグを生成
+        			let reservationId = document.querySelector("input[type='radio']:checked").value;
+        			let reservationIdElem = document.createElement("input");
+        			reservationIdElem.type = "hidden";
+        			reservationIdElem.name = "reservationId";
+        			reservationIdElem.value = reservationId;
+
+        			// formを取得し、hiddenタグを追加
+        			let form = document.getElementById("reserveForm");
+					form.appendChild(reservationIdElem);
+
+					// updateをparamsに設定しsubmit
+					form.action += "?update";
+					form.submit();
+        		});
+        	});
+        })();
+        </script>
     </head>
     <body th:with="user=${#authentication.principal.user}">
         <div>
@@ -12,7 +34,8 @@
         <p th:if="${error != null}" th:text="${error}" style="color: red;"></p>
         <form th:object="${reservationForm}"
               th:action="@{'/reservations/' + ${date} + '/' + ${roomId}}"
-              method="post">
+              method="post"
+              id="reserveForm">
             会議室:<span th:text="${room.roomName}">豊洲</span>
             <br />
             予約者名:<span th:text="${user.lastName + ' ' + user.firstName}">山田一郎</span>
@@ -30,19 +53,39 @@
             </select>
             <span th:if="${#fields.hasErrors('endTime')}" th:errors="*{endTime}" style="color:red">error !</span>
             <br />
+            通知日：<input type="date" th:field="*{remindDate}" pattern="yyyy/mm/dd">
+            <span th:if="${#fields.hasErrors('remindDate')}" th:errors="*{remindDate}" style="color:red">error !</span>
+            <br />
+            通知時刻：<input type="time" th:field="*{remindTime}" pattern="hh:mm" min="00:00" max="23:59">
+            <span th:if="${#fields.hasErrors('remindTime')}" th:errors="*{remindTime}" style="color:red">error !</span>
+            <br />
+            参加人数：<input type="number" th:field="*{memberCount}" min="1" max="100" />
+            <span th:if="${#fields.hasErrors('memberCount')}" th:errors="*{memberCount}" style="color:red">error !</span>
+            <br />
+            メモ：<textarea th:field="*{memo}"></textarea>
+            <span th:if="${#fields.hasErrors('memo')}" th:errors="*{emo}" style="color:red">error !</span>
+            <br />
             <button type="submit">予約</button>
+            <button type="button" id="updateButton">更新</button>
         </form>
 
         <table>
             <thead>
                 <tr>
+                    <th>更新</th>
                     <th>時間帯</th>
                     <th>予約者</th>
+                    <th>通知</th>
+                    <th>人数</th>
+                    <th>メモ</th>
                     <th>操作</th>
                 </tr>
             </thead>
             <tbody>
                 <tr th:each="reservation : ${reservationList}">
+                    <td>
+                        <input type="radio" name="selectReservationId" th:value="*{reservation.reservationId}" />
+                    </td>
                     <td>
                         <span th:text="${reservation.startTime}"></span>
                         -
@@ -52,6 +95,17 @@
                         <span th:text="${reservation.lastName}"></span>
                         &nbsp;
                         <span th:text="${reservation.firstName}"></span>
+                    </td>
+                    <td>
+                        <span th:text="${reservation.remindDate}"></span>
+                        &nbsp;
+                        <span th:text="${reservation.remindTime}"></span>
+                    </td>
+                    <td>
+                        <span th:if="${reservation.memberCount != null}" th:text="${reservation.memberCount} + '人'"></span>
+                    </td>
+                    <td>
+                        <span th:text="${reservation.memo}"></span>
                     </td>
                     <td>
                         <form th:action="@{'/reservations/' + ${date} + '/' + ${roomId}}"
