@@ -22,7 +22,9 @@
     <javaClientGenerator type="XMLMAPPER" targetPackage="mrs.domain.mapper.mybatis" targetProject="mrs_mybatis/src/main/java/"/>
 
 	<!-- 全てのテーブルが対象 -->
-    <table tableName="usr" />
+    <table tableName="usr">
+    	<columnOverride column="role_name" javaType="mrs.domain.model.RoleName" jdbcType="VARCHAR" typeHandler="mrs.config.mybatis.handler.GenericTypeHandler"></columnOverride>
+    </table>
     <table schema="public" tableName="meeting_room">
 	    <generatedKey column="room_id" sqlStatement="JDBC" identity="true" />
     </table>

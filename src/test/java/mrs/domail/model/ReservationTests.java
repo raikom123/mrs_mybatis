@@ -132,7 +132,7 @@ class ReservationTests {
 	@Test
 	void enabledCancel_RoleNameがADMINの場合trueを返却すること() {
 		var user = new Usr();
-		user.setRoleName(RoleName.ADMIN.name());
+		user.setRoleName(RoleName.ADMIN);
 
 		var reservation = new Reservation();
 		assertTrue(reservation.enabledCancel(user));
@@ -143,7 +143,7 @@ class ReservationTests {
 		var user = new Usr() {
 			{
 				setUserId("test");
-				setRoleName(RoleName.USER.name());
+				setRoleName(RoleName.USER);
 			}
 		};
 
@@ -160,7 +160,7 @@ class ReservationTests {
 		var user = new Usr() {
 			{
 				setUserId("test");
-				setRoleName(RoleName.USER.name());
+				setRoleName(RoleName.USER);
 			}
 		};
 		var reservation = new Reservation() {

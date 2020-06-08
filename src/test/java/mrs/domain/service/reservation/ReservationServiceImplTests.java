@@ -197,7 +197,7 @@ class ReservationServiceImplTests {
 				setFirstName("test");
 				setLastName("user");
 				setPassword("pass");
-				setRoleName(RoleName.USER.name());
+				setRoleName(RoleName.USER);
 				setUserId("test-user");
 			}
 		};
@@ -209,7 +209,7 @@ class ReservationServiceImplTests {
 				setFirstName("test");
 				setLastName("admin");
 				setPassword("word");
-				setRoleName(RoleName.ADMIN.name());
+				setRoleName(RoleName.ADMIN);
 				setUserId("test-admin");
 			}
 		};
