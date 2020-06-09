@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import mrs.domain.mapper.ReservationsMapper;
 import mrs.domain.mapper.mybatis.MeetingRoomMapper;
 import mrs.domain.mapper.mybatis.ReservationMapper;
+import mrs.domain.model.MyBatisSelectiveNullValues;
 import mrs.domain.model.ReservationEx;
 import mrs.domain.model.mybatis.MeetingRoom;
 import mrs.domain.model.mybatis.Reservation;
@@ -83,6 +84,10 @@ public class ReservationServiceImpl implements ReservationService {
 		if (overlap) {
 			throw new AlreadyReservedException("入力の時間帯はすでに予約済みです。");
 		}
+
+		reservation.setRemindDate(MyBatisSelectiveNullValues.defaultOrNullValue(reservation.getRemindDate()));
+		reservation.setRemindTime(MyBatisSelectiveNullValues.defaultOrNullValue(reservation.getRemindTime()));
+		reservation.setMemberCount(MyBatisSelectiveNullValues.defaultOrNullValue(reservation.getMemberCount()));
 
 		reservationMapper.updateByPrimaryKeySelective(reservation);
 		return reservation;

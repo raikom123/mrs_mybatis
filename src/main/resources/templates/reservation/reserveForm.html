@@ -59,7 +59,7 @@
             通知時刻：<input type="time" th:field="*{remindTime}" pattern="hh:mm" min="00:00" max="23:59">
             <span th:if="${#fields.hasErrors('remindTime')}" th:errors="*{remindTime}" style="color:red">error !</span>
             <br />
-            参加人数：<input type="number" th:field="*{memberCount}" min="1" max="100" />
+            参加人数：<input type="number" th:field="*{memberCount}" min="1" max="1000" />
             <span th:if="${#fields.hasErrors('memberCount')}" th:errors="*{memberCount}" style="color:red">error !</span>
             <br />
             メモ：<textarea th:field="*{memo}"></textarea>
