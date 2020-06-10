@@ -1,11 +1,15 @@
 package mrs.config.mybatis;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.stream.Stream;
 
+import org.apache.ibatis.mapping.SqlCommandType;
 import org.junit.jupiter.api.Test;
 
 class StatementHandlerInterceptorTests {
@@ -26,8 +30,44 @@ class StatementHandlerInterceptorTests {
 	}
 
 	@Test
-	void testGetPropertyParamIndexMap() {
-		fail("まだ実装されていません"); // TODO
+	void getColumnParamIndexMap_sqlCommandTypeがINSERTの場合getColumnParamIndexMapForInsertが呼び出されること() {
+		var statementHandlerInterceptor = spy(StatementHandlerInterceptor.class);
+		var sql = "test";
+
+		doReturn(Map.of()).when(statementHandlerInterceptor).getColumnParamIndexMapForInsert(eq(sql));
+
+		statementHandlerInterceptor.getColumnParamIndexMap(SqlCommandType.INSERT, sql);
+
+		verify(statementHandlerInterceptor, times(1)).getColumnParamIndexMapForInsert(eq(sql));
+		verify(statementHandlerInterceptor, times(0)).getColumnParamIndexMapForUpdate(anyString());
+	}
+
+	@Test
+	void getColumnParamIndexMap_sqlCommandTypeがUPDATEの場合getColumnParamIndexMapForUpdateが呼び出されること() {
+		var statementHandlerInterceptor = spy(StatementHandlerInterceptor.class);
+		var sql = "test";
+
+		doReturn(Map.of()).when(statementHandlerInterceptor).getColumnParamIndexMapForUpdate(eq(sql));
+
+		statementHandlerInterceptor.getColumnParamIndexMap(SqlCommandType.UPDATE, sql);
+
+		verify(statementHandlerInterceptor, times(0)).getColumnParamIndexMapForInsert(anyString());
+		verify(statementHandlerInterceptor, times(1)).getColumnParamIndexMapForUpdate(eq(sql));
+	}
+
+	@Test
+	void getColumnParamIndexMap_sqlCommandTypeがINSERTかUPDATEではない場合getColumnParamIndexMapForUpdateが呼び出されること() {
+		var statementHandlerInterceptor = mock(StatementHandlerInterceptor.class);
+		var sql = "test";
+
+		Stream.of(SqlCommandType.values()).filter((sqlCommandType) -> {
+			return SqlCommandType.INSERT != sqlCommandType && SqlCommandType.UPDATE != sqlCommandType;
+		}).forEach((sqlCommandType) -> {
+			statementHandlerInterceptor.getColumnParamIndexMap(sqlCommandType, sql);
+		});
+
+		verify(statementHandlerInterceptor, times(0)).getColumnParamIndexMapForInsert(sql);
+		verify(statementHandlerInterceptor, times(0)).getColumnParamIndexMapForUpdate(sql);
 	}
 
 	@Test
