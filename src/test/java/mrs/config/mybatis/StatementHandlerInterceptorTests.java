@@ -60,6 +60,9 @@ class StatementHandlerInterceptorTests {
 		var statementHandlerInterceptor = mock(StatementHandlerInterceptor.class);
 		var sql = "test";
 
+//		when(statementHandlerInterceptor.getColumnParamIndexMapForInsert(sql)).thenReturn(Map.of());
+//		when(statementHandlerInterceptor.getColumnParamIndexMapForUpdate(sql)).thenReturn(Map.of());
+
 		Stream.of(SqlCommandType.values()).filter((sqlCommandType) -> {
 			return SqlCommandType.INSERT != sqlCommandType && SqlCommandType.UPDATE != sqlCommandType;
 		}).forEach((sqlCommandType) -> {
