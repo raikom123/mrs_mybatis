@@ -43,21 +43,24 @@ public class StatementHandlerInterceptor implements Interceptor {
 			return invocation.proceed();
 		}
 
-		PreparedStatement ps = (PreparedStatement) invocation.getArgs()[0];
-		StatementHandler handler = (StatementHandler) invocation.getTarget();
+		Optional<PreparedStatement> preparedStatement = getPreparedStatement(invocation);
+		if (preparedStatement.isEmpty()) {
+			return invocation.proceed();
+		}
 
-		Field field = RoutingStatementHandler.class.getDeclaredField("delegate");
-		field.setAccessible(true);
-		PreparedStatementHandler psHandler = (PreparedStatementHandler) field.get(handler);
+		Optional<MappedStatement> mappedStatement = getMappedStatement(invocation);
+		if (mappedStatement.isEmpty()) {
+			return invocation.proceed();
+		}
 
-		Field msField = BaseStatementHandler.class.getDeclaredField("mappedStatement");
-		msField.setAccessible(true);
-		MappedStatement ms = (MappedStatement) msField.get(psHandler);
+		PreparedStatement ps = preparedStatement.get();
+		MappedStatement ms = mappedStatement.get();
 
 		if (!isInterceptTarget(ms.getId())) {
 			return invocation.proceed();
 		}
 
+		var handler = (StatementHandler) invocation.getTarget();
 		var conf = ms.getConfiguration();
 		getResultMap(conf.getResultMapNames(), ms.getId()).ifPresent((id) -> {
 			var resultMap = conf.getResultMap(id);
@@ -70,6 +73,34 @@ public class StatementHandlerInterceptor implements Interceptor {
 		});
 
 		return invocation.proceed();
+	}
+
+	Optional<PreparedStatement> getPreparedStatement(Invocation invocation) {
+		if (invocation.getArgs()[0] instanceof PreparedStatement) {
+			return Optional.of((PreparedStatement) invocation.getArgs()[0]);
+		}
+
+		return Optional.empty();
+	}
+
+	Optional<MappedStatement> getMappedStatement(Invocation invocation) {
+		try {
+			StatementHandler handler = (StatementHandler) invocation.getTarget();
+
+			Field field = RoutingStatementHandler.class.getDeclaredField("delegate");
+			field.setAccessible(true);
+			PreparedStatementHandler psHandler = (PreparedStatementHandler) field.get(handler);
+
+			Field msField = BaseStatementHandler.class.getDeclaredField("mappedStatement");
+			msField.setAccessible(true);
+
+			MappedStatement ms = (MappedStatement) msField.get(psHandler);
+
+			return Optional.of(ms);
+		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
+			log.warn("Cannot access MappedStatement.", e);
+			return Optional.empty();
+		}
 	}
 
 	public boolean isInterceptTarget(String id) {

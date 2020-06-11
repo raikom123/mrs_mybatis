@@ -4,29 +4,124 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import java.lang.reflect.InvocationTargetException;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.stream.Stream;
 
+import org.apache.ibatis.mapping.ResultMap;
+import org.apache.ibatis.mapping.ResultMapping;
 import org.apache.ibatis.mapping.SqlCommandType;
+import org.apache.ibatis.reflection.Reflector;
+import org.apache.ibatis.reflection.invoker.Invoker;
+import org.apache.ibatis.session.Configuration;
+import org.apache.ibatis.type.IntegerTypeHandler;
+import org.apache.ibatis.type.JdbcType;
+import org.apache.ibatis.type.LocalDateTypeHandler;
+import org.apache.ibatis.type.LocalTimeTypeHandler;
+import org.apache.ibatis.type.StringTypeHandler;
 import org.junit.jupiter.api.Test;
+
+import mrs.domain.model.MyBatisSelectiveNullValues;
 
 class StatementHandlerInterceptorTests {
 
 	@Test
 	void testIntercept() {
-		fail("まだ実装されていません"); // TODO
+
 	}
 
 	@Test
-	void testIsInterceptTarget() {
-		fail("まだ実装されていません"); // TODO
+	void getPreparedStatement() {
+
 	}
 
 	@Test
-	void testUpdateNullValues() {
-		fail("まだ実装されていません"); // TODO
+	void getMappedStatement() {
+
+	}
+
+	@Test
+	void isInterceptTarget() {
+		var statementHandlerInterceptor = new StatementHandlerInterceptor();
+		Stream.of("insertSelective", "updateByExampleSelective", "updateByPrimaryKeySelective").forEach((methodName) -> {
+			StringJoiner id = new StringJoiner(".");
+			id.add("aaa");
+			id.add("bbb");
+			id.add("CccClass");
+			id.add(methodName);
+			assertTrue(statementHandlerInterceptor.isInterceptTarget(id.toString()));
+		});
+		Stream.of("selectByPrimaryKey", "insert", "updateByPrimaryKey").forEach((methodName) -> {
+			StringJoiner id = new StringJoiner(".");
+			id.add("aaa");
+			id.add("bbb");
+			id.add("CccClass");
+			id.add(methodName);
+			assertFalse(statementHandlerInterceptor.isInterceptTarget(id.toString()));
+		});
+	}
+
+	@Test
+	void updateNullValues() throws IllegalAccessException, InvocationTargetException, SQLException {
+		String prop1 = "prop1";
+		String prop2 = "prop2";
+		String prop3 = "prop3";
+		String prop4 = "prop4";
+		LocalDate value1 = MyBatisSelectiveNullValues.DATE;
+		LocalTime value2 = MyBatisSelectiveNullValues.TIME;
+		Integer value3 = MyBatisSelectiveNullValues.INTEGER;
+		String value4 = "test";
+
+		PreparedStatement ps = mock(PreparedStatement.class);
+		doNothing().when(ps).setNull(anyInt(), anyInt());
+
+		Reflector ref = mock(Reflector.class);
+
+		when(ref.getGetablePropertyNames()).thenReturn(List.of(prop1, prop2, prop3, prop4).toArray(new String[0]));
+
+		Invoker invoker1 = mock(Invoker.class);
+		when(invoker1.invoke(any(), any())).thenReturn(value1);
+		when(ref.getGetInvoker(eq(prop1))).thenReturn(invoker1);
+
+		Invoker invoker2 = mock(Invoker.class);
+		when(invoker2.invoke(any(), any())).thenReturn(value2);
+		when(ref.getGetInvoker(eq(prop2))).thenReturn(invoker2);
+
+		Invoker invoker3 = mock(Invoker.class);
+		when(invoker3.invoke(any(), any())).thenReturn(value3);
+		when(ref.getGetInvoker(eq(prop3))).thenReturn(invoker3);
+
+		Invoker invoker4 = mock(Invoker.class);
+		when(invoker4.invoke(any(), any())).thenReturn(value4);
+		when(ref.getGetInvoker(eq(prop4))).thenReturn(invoker4);
+
+		Object parameter = new Object();
+		Map<String, List<Integer>> columnParamIndexMap = Map.of("col1", List.of(0, 4), "col2", List.of(1), "col3", List.of(2), "col4", List.of(3));
+
+		Configuration conf = mock(Configuration.class);
+		doReturn(false).when(conf).isLazyLoadingEnabled();
+
+		ResultMap resultMap = mock(ResultMap.class);
+		doReturn(List.of(
+				new ResultMapping.Builder(conf, prop1, "col1", new LocalDateTypeHandler()).jdbcType(JdbcType.DATE).build(),
+				new ResultMapping.Builder(conf, prop2, "col2", new LocalTimeTypeHandler()).jdbcType(JdbcType.TIME).build(),
+				new ResultMapping.Builder(conf, prop3, "col3", new IntegerTypeHandler()).jdbcType(JdbcType.INTEGER).build(),
+				new ResultMapping.Builder(conf, prop4, "col4", new StringTypeHandler()).jdbcType(JdbcType.VARCHAR).build()))
+		.when(resultMap).getResultMappings();
+
+		var statementHandlerInterceptor = new StatementHandlerInterceptor();
+		statementHandlerInterceptor.updateNullValues(ps, ref, parameter, columnParamIndexMap, resultMap);
+
+		verify(ps, times(1)).setNull(eq(0), anyInt());
+		verify(ps, times(1)).setNull(eq(1), anyInt());
+		verify(ps, times(1)).setNull(eq(2), anyInt());
+		verify(ps, times(1)).setNull(eq(4), anyInt());
 	}
 
 	@Test
@@ -59,9 +154,6 @@ class StatementHandlerInterceptorTests {
 	void getColumnParamIndexMap_sqlCommandTypeがINSERTかUPDATEではない場合getColumnParamIndexMapForUpdateが呼び出されること() {
 		var statementHandlerInterceptor = mock(StatementHandlerInterceptor.class);
 		var sql = "test";
-
-//		when(statementHandlerInterceptor.getColumnParamIndexMapForInsert(sql)).thenReturn(Map.of());
-//		when(statementHandlerInterceptor.getColumnParamIndexMapForUpdate(sql)).thenReturn(Map.of());
 
 		Stream.of(SqlCommandType.values()).filter((sqlCommandType) -> {
 			return SqlCommandType.INSERT != sqlCommandType && SqlCommandType.UPDATE != sqlCommandType;

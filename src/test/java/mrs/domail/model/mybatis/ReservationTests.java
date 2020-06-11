@@ -1,4 +1,4 @@
-package mrs.domail.model;
+package mrs.domail.model.mybatis;
 
 import static org.junit.jupiter.api.Assertions.*;
 
