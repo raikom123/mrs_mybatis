@@ -1,9 +1,20 @@
+// spring java format
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath('io.spring.javaformat:spring-javaformat-gradle-plugin:0.0.22')
+    }
+}
 
 plugins {
     id 'org.springframework.boot' version '2.3.0.RELEASE'
     id 'io.spring.dependency-management' version '1.0.9.RELEASE'
     id 'java'
     id 'jacoco'
+    id 'checkstyle'
+    id "com.github.spotbugs" version "4.4.4"
 }
 
 group = 'mrs'
@@ -18,6 +29,15 @@ configurations {
 
 repositories {
     mavenCentral()
+}
+
+// spring java format
+apply plugin: 'io.spring.javaformat'
+
+checkstyle {
+    configFile = file('./src/main/resources/checkstyle.xml')
+    toolVersion = '8.32'
+    ignoreFailures = false
 }
 
 dependencies {
@@ -37,6 +57,9 @@ dependencies {
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }
+
+    // check style
+    checkstyle 'io.spring.javaformat:spring-javaformat-checkstyle:0.0.22'
 }
 
 test {
