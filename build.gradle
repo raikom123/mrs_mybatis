@@ -1,20 +1,11 @@
-// spring java format
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath('io.spring.javaformat:spring-javaformat-gradle-plugin:0.0.22')
-    }
-}
-
 plugins {
     id 'org.springframework.boot' version '2.3.0.RELEASE'
     id 'io.spring.dependency-management' version '1.0.9.RELEASE'
     id 'java'
     id 'jacoco'
+    id 'com.github.sherter.google-java-format' version '0.9'
     id 'checkstyle'
-    id "com.github.spotbugs" version "4.4.4"
+    id "com.github.spotbugs" version "4.4.1"
 }
 
 group = 'mrs'
@@ -29,15 +20,6 @@ configurations {
 
 repositories {
     mavenCentral()
-}
-
-// spring java format
-apply plugin: 'io.spring.javaformat'
-
-checkstyle {
-    configFile = file('./src/main/resources/checkstyle.xml')
-    toolVersion = '8.32'
-    ignoreFailures = false
 }
 
 dependencies {
@@ -57,9 +39,7 @@ dependencies {
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }
-
-    // check style
-    checkstyle 'io.spring.javaformat:spring-javaformat-checkstyle:0.0.22'
+    spotbugsPlugins 'com.h3xstream.findsecbugs:findsecbugs-plugin:1.10.1'
 }
 
 test {
@@ -77,4 +57,28 @@ jacocoTestReport {
         csv.enabled false
         html.destination file("${buildDir}/jacocoHtml")
     }
+}
+
+// google java format
+googleJavaFormat {
+    exclude '**/mybatis/*.java'
+}
+
+verifyGoogleJavaFormat {
+    exclude '**/mybatis/*.java'
+}
+
+// checkstyle
+checkstyle {
+    configFile = file("${rootProject.projectDir}/config/checkstyle/checkstyle.xml")
+    toolVersion = '8.34'
+    ignoreFailures = false
+}
+checkstyleMain.exclude "**/mybatis/*.java"
+checkstyleTest.exclude "**/mybatis/*.java"
+
+// spot bugs
+spotbugs {
+    toolVersion = '4.0.6'
+    excludeFilter = file("${rootProject.projectDir}/config/spotbugs/spotbugs-exclude.xml")
 }
