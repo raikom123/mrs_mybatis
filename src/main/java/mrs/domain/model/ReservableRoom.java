@@ -8,6 +8,5 @@ import mrs.domain.model.mybatis.ReservableRoomKey;
 @Setter
 public class ReservableRoom extends ReservableRoomKey {
 
-	private String roomName;
-
+  private String roomName;
 }

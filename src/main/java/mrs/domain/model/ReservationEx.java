@@ -8,8 +8,7 @@ import mrs.domain.model.mybatis.Reservation;
 @Setter
 public class ReservationEx extends Reservation {
 
-	private String lastName;
+  private String lastName;
 
-	private String firstName;
-
+  private String firstName;
 }
