@@ -72,7 +72,7 @@ verifyGoogleJavaFormat {
 checkstyle {
     configFile = file("${rootProject.projectDir}/config/checkstyle/checkstyle.xml")
     toolVersion = '8.34'
-    ignoreFailures = false
+    ignoreFailures = true
 }
 checkstyleMain.exclude "**/mybatis/*.java"
 checkstyleTest.exclude "**/mybatis/*.java"
@@ -81,4 +81,5 @@ checkstyleTest.exclude "**/mybatis/*.java"
 spotbugs {
     toolVersion = '4.0.6'
     excludeFilter = file("${rootProject.projectDir}/config/spotbugs/spotbugs-exclude.xml")
+    ignoreFailures = true
 }
