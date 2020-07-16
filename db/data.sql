@@ -36,4 +36,4 @@ INSERT INTO reservable_room (reserved_date, room_id) VALUES (CURRENT_DATE - 1, 7
 
 INSERT INTO public.usr(
     user_id, first_name, last_name, password, role_name)
-    VALUES ('taro-yamada', 'taro', 'yamada', 'taro_yamada', 'USER');
+    VALUES ('taro-yamada', 'taro', 'yamada', 'taro-yamada', 'USER');
