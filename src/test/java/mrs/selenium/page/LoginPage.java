@@ -17,7 +17,7 @@ public class LoginPage {
   }
 
   LoginPage(WebDriver driver) {
-   this.driver = driver;
+    this.driver = driver;
   }
 
   public RoomPage login(String userName, String password) {
@@ -39,5 +39,4 @@ public class LoginPage {
     loginPage.access();
     return loginPage;
   }
-
 }

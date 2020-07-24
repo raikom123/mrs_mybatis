@@ -21,5 +21,4 @@ public class RoomPage {
     wait.until(ExpectedConditions.presenceOfElementLocated(By.id("password")));
     return new LoginPage(driver);
   }
-
 }
