@@ -1,5 +1,7 @@
 package mrs.selenium.scenario;
 
+import mrs.MrsApplication;
+import mrs.selenium.page.LoginPage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,9 +11,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import mrs.MrsApplication;
-import mrs.selenium.page.LoginPage;
-
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
     classes = {MrsApplication.class},
@@ -20,8 +19,7 @@ public abstract class SeleniumTestCase {
 
   private WebDriver driver;
 
-  @LocalServerPort
-  private int port;
+  @LocalServerPort private int port;
 
   @BeforeEach
   private void before() {
@@ -42,5 +40,4 @@ public abstract class SeleniumTestCase {
   }
 
   protected abstract WebDriver createWebDriver();
-
 }

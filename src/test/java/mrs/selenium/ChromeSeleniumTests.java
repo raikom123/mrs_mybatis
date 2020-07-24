@@ -1,10 +1,8 @@
 package mrs.selenium;
 
+import mrs.selenium.scenario.SeleniumTestCase;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
-
-import mrs.selenium.scenario.SeleniumTestCase;
-
 
 public class ChromeSeleniumTests extends SeleniumTestCase {
 
