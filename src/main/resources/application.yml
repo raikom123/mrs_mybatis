@@ -8,8 +8,8 @@ spring:
         format_sql: true
   datasource:
     url: jdbc:postgresql://localhost:5432/mrs
-    username: mrs
-    password: mrs
+    username: test01
+    password: test01test01
     driverClassName: org.postgresql.Driver
     sql-script-encoding: UTF-8
 logging:

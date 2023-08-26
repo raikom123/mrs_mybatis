@@ -13,7 +13,7 @@ public class MyBatisSelectiveNullValues {
 
   public static final LocalDate DATE = LocalDate.of(9999, 12, 31);
   public static final LocalTime TIME = LocalTime.of(23, 59, 59, 999_999_999);
-  public static final Integer INTEGER = Integer.valueOf(1);
+  public static final Integer INTEGER = Integer.MIN_VALUE;
 
   public static LocalDate defaultOrNullValue(LocalDate defaultValue) {
     return Objects.requireNonNullElse(defaultValue, DATE);
@@ -30,11 +30,10 @@ public class MyBatisSelectiveNullValues {
   public static boolean isNullValue(Object obj) {
     if (DATE == obj) {
       return true;
-    } else if (TIME == obj) {
-      return true;
-    } else if (INTEGER == obj) {
+    }
+    if (TIME == obj) {
       return true;
     }
-    return false;
+    return INTEGER == obj;
   }
 }

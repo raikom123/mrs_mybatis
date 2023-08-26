@@ -22,11 +22,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class ReservationServiceImpl implements ReservationService {
 
-  private ReservationMapper reservationMapper;
+  private final ReservationMapper reservationMapper;
 
-  private MeetingRoomMapper meetingRoomMapper;
+  private final MeetingRoomMapper meetingRoomMapper;
 
-  private ReservationsMapper reservationsMapper;
+  private final ReservationsMapper reservationsMapper;
 
   @Autowired
   public ReservationServiceImpl(
@@ -52,16 +52,13 @@ public class ReservationServiceImpl implements ReservationService {
         .orElseThrow(() -> new UnavailableReservationException("入力の日付・部屋の組み合わせは予約できません。"));
 
     // 重複チェック
+    var example = new ReservationExample();
+    example.createCriteria()
+           .andRoomIdEqualTo(reservation.getRoomId())
+           .andReservedDateEqualTo(reservation.getReservedDate());
     boolean overlap =
         reservationMapper
-            .selectByExample(
-                new ReservationExample() {
-                  {
-                    createCriteria()
-                        .andRoomIdEqualTo(reservation.getRoomId())
-                        .andReservedDateEqualTo(reservation.getReservedDate());
-                  }
-                })
+            .selectByExample(example)
             .stream()
             .anyMatch(x -> x.overlap(reservation));
     if (overlap) {
@@ -80,17 +77,14 @@ public class ReservationServiceImpl implements ReservationService {
                 reservation.getRoomId(), reservation.getReservedDate()))
         .orElseThrow(() -> new UnavailableReservationException("入力の日付・部屋の組み合わせは予約できません。"));
 
+    var example = new ReservationExample();
+    example.createCriteria()
+           .andRoomIdEqualTo(reservation.getRoomId())
+           .andReservedDateEqualTo(reservation.getReservedDate())
+           .andReservationIdNotEqualTo(reservation.getReservationId());
     boolean overlap =
         reservationMapper
-            .selectByExample(
-                new ReservationExample() {
-                  {
-                    createCriteria()
-                        .andRoomIdEqualTo(reservation.getRoomId())
-                        .andReservedDateEqualTo(reservation.getReservedDate())
-                        .andReservationIdNotEqualTo(reservation.getReservationId());
-                  }
-                })
+            .selectByExample(example)
             .stream()
             .anyMatch(x -> x.overlap(reservation));
     if (overlap) {
@@ -104,6 +98,7 @@ public class ReservationServiceImpl implements ReservationService {
     reservation.setMemberCount(
         MyBatisSelectiveNullValues.defaultOrNullValue(reservation.getMemberCount()));
 
+    // 本当はupdateByPrimaryKeyでいいが、updateByPrimaryKeySelectiveでnullに更新する検証のため
     reservationMapper.updateByPrimaryKeySelective(reservation);
     return reservation;
   }
