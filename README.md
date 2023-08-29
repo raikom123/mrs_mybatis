@@ -16,6 +16,11 @@ Spring Boot + MyBatis + JPA + Thymeleaf + Security で会議室予約のWebア�
 - DBはdockerで起動したpostgreSQLに接続する。
 - 単体テストではH2DBを使用する。
 
+## やりたかったこと
+
+- Spring Securotyでのログイン認証
+- MyBatisのMapperで提供されるupdateBySelectiveではnullに更新できないため、Interceptorを利用してnullに更新できるようにする。
+
 ## 注意点
 
 - etc/dockerフォルダで"docker-compose up"することでDBを起動できる。
